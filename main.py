@@ -93,7 +93,7 @@ fig2.update_layout(
     hovermode="x unified",
     legend=dict(
         title="영화 목록 (클릭시 토글)",
-        orientation="h",  # 범례를 가로로 배치 (선택 사항)
+        orientation="h",
         yanchor="bottom",
         y=1.02,
         xanchor="right",
@@ -110,7 +110,66 @@ st.markdown("---")
 
 
 # ====================================================
-# [구역 3] (추가 그래프 구역 예시)
+# [구역 3] 날짜별 10위권 일관객 합계 (영역 그래프)
 # ====================================================
-# st.header("3. 세 번째 그래프 구역")
-# st.caption("새로운 분석 그래프를 여기에 지속적으로 추가할 수 있습니다.")
+st.header("3. 날짜별 10위권 일관객 합계 추이")
+st.caption("매일 박스오피스 10위권 영화들의 일관객을 모두 더해 극장가 전체 관객 규모의 흐름을 영역 그래프로 나타냅니다.")
+
+# 날짜별 10위권 일관객 합계 계산
+df_daily_total = df.groupby('날짜')['일관객'].sum().reset_index().sort_values('날짜')
+
+# 관객 수 합계가 가장 컸던 상위 3일 추출
+top3_days = df_daily_total.nlargest(3, '일관객')
+
+# 영역 그래프(Area Chart) 생성
+fig3 = px.area(
+    df_daily_total,
+    x='날짜',
+    y='일관객',
+    title="날짜별 10위권 관객수 전체 합계 흐름",
+    labels={'날짜': '날짜', '일관객': '10위권 관객수 합계 (명)'}
+)
+
+# 호버 포맷 지정
+fig3.update_traces(
+    hovertemplate="<b>날짜:</b> %{x|%Y-%m-%d}<br><b>10위권 총 관객수:</b> %{y:,}명<extra></extra>",
+    fillcolor="rgba(31, 119, 180, 0.3)",
+    line=dict(color="#1f77b4")
+)
+
+# 관객수 TOP 3 날짜에 텍스트 및 화살표 표시 (Annotation)
+for rank, (_, row) in enumerate(top3_days.iterrows(), 1):
+    date_str = row['날짜'].strftime('%Y-%m-%d')
+    val_str = f"{row['일관객']:,}명"
+    
+    fig3.add_annotation(
+        x=row['날짜'],
+        y=row['일관객'],
+        text=f"<b>🔥 TOP {rank}</b><br>{date_str}<br>({val_str})",
+        showarrow=True,
+        arrowhead=2,
+        arrowsize=1,
+        arrowwidth=2,
+        arrowcolor="#E02424",
+        ax=0,
+        ay=-45,
+        bgcolor="white",
+        bordercolor="#E02424",
+        borderwidth=1,
+        borderpad=4
+    )
+
+fig3.update_layout(hovermode="x unified")
+
+st.plotly_chart(fig3, use_container_width=True)
+
+# 그래프 분석 내용 작성 칸
+st.info("💡 **이 그래프로 알 수 있는 것**: 명절, 연휴, 크리스마스 등 1년 중 극장가 전체에 관객이 가장 몰렸던 최전성기 날짜 TOP 3와 극장가 비수기/성수기 시즌 흐름을 한눈에 파악할 수 있습니다.")
+
+st.markdown("---")
+
+
+# ====================================================
+# [구역 4] (네 번째 그래프 추가 구역)
+# ====================================================
+# st.header("4. 네 번째 그래프 구역")
