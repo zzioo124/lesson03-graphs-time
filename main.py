@@ -170,6 +170,66 @@ st.markdown("---")
 
 
 # ====================================================
-# [구역 4] (네 번째 그래프 추가 구역)
+# [구역 4] 기간 내 총 관객수 TOP 10 영화 (가로 막대그래프)
 # ====================================================
-# st.header("4. 네 번째 그래프 구역")
+st.header("4. 기간 내 총 관객수 TOP 10 영화")
+st.caption("분석 기간 동안 10위권 내에서 동원한 총 관객수를 기준으로 TOP 10 영화를 선정하여 순위를 비교합니다.")
+
+# 영화별 총 관객수 및 10위권 진입 일수 집계
+df_movie_summary = (
+    df.groupby('영화명')
+    .agg(
+        총관객수=('일관객', 'sum'),
+        진입일수=('날짜', 'count')
+    )
+    .reset_index()
+)
+
+# 총 관객수 기준 상위 10개 영화 추출
+df_top10 = df_movie_summary.nlargest(10, '총관객수')
+
+# 가로 막대그래프에서 상위 순위가 위쪽에 오도록 오름차순 정렬
+df_top10_sorted = df_top10.sort_values('총관객수', ascending=True)
+
+# Plotly 가로 막대그래프 생성
+fig4 = px.bar(
+    df_top10_sorted,
+    x='총관객수',
+    y='영화명',
+    orientation='h',
+    text='총관객수',
+    title="기간 내 총 관객수 TOP 10 영화 및 10위권 진입 일수",
+    labels={'총관객수': '총 관객수 (명)', '영화명': '영화 제목'},
+    color='총관객수',
+    color_continuous_scale='Blues'
+)
+
+# 막대 외부 수치 레이블 및 customdata(10위권 진입 일수) 지정
+fig4.update_traces(
+    texttemplate='%{text:,}명',
+    textposition='outside',
+    customdata=df_top10_sorted[['진입일수']],
+    hovertemplate="<b>영화명:</b> %{y}<br><b>총 관객수:</b> %{x:,}명<br><b>10위권 진입 일수:</b> %{customdata[0]}일<extra></extra>"
+)
+
+# 차트 여백 및 색상바(Colorbar) 레이아웃 조정
+fig4.update_layout(
+    coloraxis_showscale=False,
+    xaxis=dict(title="총 관객수 (명)"),
+    yaxis=dict(title="영화 제목"),
+    height=500
+)
+
+st.plotly_chart(fig4, use_container_width=True)
+
+# 그래프 분석 내용 작성 칸
+st.info("💡 **이 그래프로 알 수 있는 것**: 분석 기간 내 최다 관객을 동원한 히트작 10편의 누적 규모 차이와, 각 영화가 박스오피스 10위권 내에 며칠 동안 상주(롱런)했는지를 한눈에 비교할 수 있습니다.")
+
+st.markdown("---")
+
+
+# ====================================================
+# [구역 5] (다섯 번째 그래프 추가 구역)
+# ====================================================
+# st.header("5. 다섯 번째 그래프 구역")
+# st.caption("새로운 분석 시각화 요소를 지속적으로 추가할 수 있는 확장 영역입니다.")
