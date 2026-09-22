@@ -229,7 +229,61 @@ st.markdown("---")
 
 
 # ====================================================
-# [구역 5] (다섯 번째 그래프 추가 구역)
+# [구역 5] 월 × 요일별 일관객 합계 (히트맵)
 # ====================================================
-# st.header("5. 다섯 번째 그래프 구역")
+st.header("5. 월 × 요일별 일관객 합계 분포")
+st.caption("날짜 데이터에서 월과 요일을 추출하여 각 월과 요일 조합별 총관객 합계를 히트맵으로 시각화합니다. (색이 진할수록 관객 수가 많습니다)")
+
+# 월 및 요일 번호 추출 (0: 월요일 ~ 6: 일요일)
+df_heatmap_data = df.copy()
+df_heatmap_data['월'] = df_heatmap_data['날짜'].dt.month
+df_heatmap_data['요일_num'] = df_heatmap_data['날짜'].dt.dayofweek
+
+# 요일 이름 정의 (월요일부터 일요일 순서)
+day_names = ['월요일', '화요일', '수요일', '목요일', '금요일', '토요일', '일요일']
+
+# 월 x 요일별 일관객 합계 집계
+df_monthly_day = df_heatmap_data.groupby(['월', '요일_num'])['일관객'].sum().reset_index()
+
+# 피벗 테이블 생성 (행: 요일, 열: 월)
+pivot_df = df_monthly_day.pivot(index='요일_num', columns='월', values='일관객').fillna(0)
+
+# Y축(행) 요일 이름 변경 및 X축(열) 월 이름 변경
+pivot_df.index = [day_names[i] for i in pivot_df.index if i in pivot_df.index]
+pivot_df.columns = [f"{m}월" for m in pivot_df.columns]
+
+# Plotly Heatmap 생성 (진한 파란색 계열 Blues 스케일)
+fig5 = px.imshow(
+    pivot_df,
+    labels=dict(x="월", y="요일", color="총 관객수 (명)"),
+    x=pivot_df.columns,
+    y=pivot_df.index,
+    color_continuous_scale="Blues",
+    title="월 × 요일별 10위권 관객수 합계 히트맵",
+    text_auto=',.0f'
+)
+
+# 호버 포맷 설정
+fig5.update_traces(
+    hovertemplate="<b>%{x} %{y}</b><br>총 관객수: %{z:,}명<extra></extra>"
+)
+
+fig5.update_layout(
+    xaxis=dict(title="월"),
+    yaxis=dict(title="요일"),
+    height=480
+)
+
+st.plotly_chart(fig5, use_container_width=True)
+
+# 그래프 분석 내용 작성 칸
+st.info("💡 **이 그래프로 알 수 있는 것**: 월별 주말(토/일요일)과 평일 간의 관객 수 격차를 비교할 수 있으며, 연중 어느 달의 무슨 요일에 극장가 관객 집중도가 가장 높았는지 직관적으로 파악할 수 있습니다.")
+
+st.markdown("---")
+
+
+# ====================================================
+# [구역 6] (여섯 번째 그래프 추가 구역)
+# ====================================================
+# st.header("6. 여섯 번째 그래프 구역")
 # st.caption("새로운 분석 시각화 요소를 지속적으로 추가할 수 있는 확장 영역입니다.")
